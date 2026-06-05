@@ -1,7 +1,7 @@
 /**
  * Dashboard Generation API Route
  * 
- * POST /api/generate
+ * POST /api/dashboards
  * 
  * Receives a user query + data context, calls the LLM via GitHub Models
  * (OpenAI SDK pointing to GitHub's inference endpoint), validates the
@@ -10,7 +10,7 @@
  * Retry strategy: if Zod validation fails, retries once with the error
  * message appended so the LLM can self-correct.
  * 
- * @module api/generate
+ * @module api/dashboards
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -24,6 +24,7 @@ interface GenerateRequest {
   query: string;
   schemaDoc: string;
   csvData?: Record<string, string>[];
+  context?: { previousQuery: string; previousDescriptor: any };
 }
 
 interface ErrorResponse {
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(validated, { status: 422 });
   }
 
-  const { query, schemaDoc } = validated;
+  const { query, schemaDoc, context } = validated;
 
   // Check API key
   if (!GITHUB_TOKEN) {
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const client = getClient();
-    const systemPrompt = buildSystemPrompt(schemaDoc);
+    const systemPrompt = buildSystemPrompt(schemaDoc, context);
 
     // ── First attempt ──────────────────────────────────────────────────────
     const firstResponse = await client.chat.completions.create({

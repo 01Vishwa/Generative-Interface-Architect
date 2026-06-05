@@ -46,19 +46,19 @@ export default function BarChartCard({
       <div className="chart-container">
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
             <XAxis
               dataKey="name"
-              stroke="rgba(255,255,255,0.4)"
+              stroke="var(--chart-axis)"
               fontSize={11}
-              label={x_label ? { value: x_label, position: "bottom", offset: 0, fill: "rgba(255,255,255,0.5)", fontSize: 11 } : undefined}
-              tick={{ fill: "rgba(255,255,255,0.6)" }}
+              label={x_label ? { value: x_label, position: "bottom", offset: 0, fill: "var(--chart-text)", fontSize: 11 } : undefined}
+              tick={{ fill: "var(--chart-text)" }}
             />
             <YAxis
-              stroke="rgba(255,255,255,0.4)"
+              stroke="var(--chart-axis)"
               fontSize={11}
-              label={y_label ? { value: y_label, angle: -90, position: "insideLeft", fill: "rgba(255,255,255,0.5)", fontSize: 11 } : undefined}
-              tick={{ fill: "rgba(255,255,255,0.6)" }}
+              label={y_label ? { value: y_label, angle: -90, position: "insideLeft", fill: "var(--chart-text)", fontSize: 11 } : undefined}
+              tick={{ fill: "var(--chart-text)" }}
               tickFormatter={(v: number) => {
                 if (v >= 1000000) return `${(v / 1000000).toFixed(1)}M`;
                 if (v >= 1000) return `${(v / 1000).toFixed(0)}K`;
@@ -67,10 +67,10 @@ export default function BarChartCard({
             />
             <Tooltip
               contentStyle={{
-                background: "rgba(15, 15, 30, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "var(--chart-tooltip-bg)",
+                border: `1px solid var(--chart-tooltip-border)`,
                 borderRadius: "8px",
-                color: "#fff",
+                color: "var(--chart-tooltip-text)",
                 fontSize: "12px",
               }}
               formatter={(val: number) => [val.toLocaleString(), "Value"]}

@@ -20,6 +20,7 @@ import ScatterChartCard from "./charts/ScatterChartCard";
 import DataTableCard from "./charts/DataTableCard";
 import FallbackCard from "./charts/FallbackCard";
 import InsightBanner from "./charts/InsightBanner";
+import ChartErrorBoundary from "./ChartErrorBoundary";
 
 interface DashboardRendererProps {
   descriptor: DashboardDescriptor;
@@ -57,8 +58,18 @@ export default function DashboardRenderer({ descriptor }: DashboardRendererProps
 
   return (
     <div className="dashboard-rendered">
-      {/* Dashboard Title */}
-      <h2 className="dashboard-title">{descriptor.title}</h2>
+      <div className="dashboard-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2 className="dashboard-title">{descriptor.title}</h2>
+        <button
+          onClick={() => window.print()}
+          className="demo-load-btn"
+          style={{ padding: "8px 16px", fontSize: "12px", gap: "6px" }}
+          aria-label="Export Dashboard"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export
+        </button>
+      </div>
 
       {/* KPI Row */}
       {descriptor.kpis.length > 0 && (
@@ -72,7 +83,11 @@ export default function DashboardRenderer({ descriptor }: DashboardRendererProps
       {/* Charts Grid */}
       {descriptor.charts.length > 0 && (
         <div className={`charts-grid ${layoutClass}`}>
-          {descriptor.charts.map((chart, i) => renderChart(chart, i))}
+          {descriptor.charts.map((chart, i) => (
+            <ChartErrorBoundary key={`error-boundary-${i}`}>
+              {renderChart(chart, i)}
+            </ChartErrorBoundary>
+          ))}
         </div>
       )}
 

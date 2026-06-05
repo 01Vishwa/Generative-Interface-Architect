@@ -16,15 +16,26 @@
  * @param schemaDoc - Plain-English schema document from generateSchemaDoc()
  * @returns Complete system prompt string
  */
-export function buildSystemPrompt(schemaDoc: string): string {
+export function buildSystemPrompt(schemaDoc: string, context?: { previousQuery: string; previousDescriptor: any }): string {
+  const refinementInstruction = context 
+    ? `\n## REFINEMENT MODE
+You are refining an existing dashboard. 
+Previous User Query: "${context.previousQuery}"
+Previous Dashboard JSON:
+${JSON.stringify(context.previousDescriptor)}
+
+Your task is to modify the Previous Dashboard JSON to satisfy the NEW user query. Keep the rest of the dashboard intact unless it conflicts with the new query.`
+    : "";
+
   return `You are a dashboard architect. Your ONLY job is to analyze user data and questions, then output a JSON descriptor that a renderer will use to build a real dashboard.
+${refinementInstruction}
 
 ## CRITICAL RULES
 1. Output ONLY valid JSON. No markdown fences. No explanation. No text before or after the JSON.
 2. Every response MUST be a single JSON object matching the schema below EXACTLY.
 3. Use REAL numbers computed from the provided data. Never fabricate data.
 4. If the user's question is vague, create a general overview dashboard with the most insightful views of the data.
-5. Choose chart types that best represent the data relationships — bar for comparisons, line for trends over time, pie for proportions, scatter for correlations, table for detailed records.
+5. Choose chart types that best represent the data relationships.
 
 ## JSON SCHEMA (strict — no extra fields allowed)
 
