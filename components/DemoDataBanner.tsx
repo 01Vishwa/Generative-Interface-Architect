@@ -8,12 +8,14 @@
 
 import { useState } from "react";
 import { Database, Loader2 } from "lucide-react";
+import { Play } from "lucide-react";
 import Papa from "papaparse";
 import { generateSchemaDoc, type SchemaDoc } from "@/lib/schema-generator";
+import { coerceDataTypes } from "@/lib/data-utils";
 
 interface DemoDataBannerProps {
   onDataLoaded: (
-    data: Record<string, string>[],
+    data: Record<string, any>[],
     schemaDoc: SchemaDoc
   ) => void;
   hasData: boolean;
@@ -34,7 +36,8 @@ export default function DemoDataBanner({ onDataLoaded, hasData }: DemoDataBanner
         complete: (results) => {
           const data = results.data as Record<string, string>[];
           const schema = generateSchemaDoc("sales_q3.csv", data);
-          onDataLoaded(data, schema);
+          const coercedData = coerceDataTypes(data);
+          onDataLoaded(coercedData, schema);
           setIsLoading(false);
         },
         error: () => {

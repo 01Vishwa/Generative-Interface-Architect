@@ -54,7 +54,7 @@ export default function PieChartCard({
               label={({ name, percent }) =>
                 `${name} ${(percent * 100).toFixed(0)}%`
               }
-              labelLine={{ stroke: "rgba(255,255,255,0.3)" }}
+              labelLine={{ stroke: "var(--chart-axis)" }}
             >
               {data.map((_, i) => (
                 <Cell key={i} fill={palette[i % palette.length]} />
@@ -62,10 +62,10 @@ export default function PieChartCard({
             </Pie>
             <Tooltip
               contentStyle={{
-                background: "rgba(15, 15, 30, 0.95)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                background: "var(--chart-tooltip-bg)",
+                border: `1px solid var(--chart-tooltip-border)`,
                 borderRadius: "8px",
-                color: "#fff",
+                color: "var(--chart-tooltip-text)",
                 fontSize: "12px",
               }}
               formatter={(val: number) => [val.toLocaleString(), "Value"]}
@@ -74,7 +74,7 @@ export default function PieChartCard({
               verticalAlign="bottom"
               iconType="circle"
               iconSize={8}
-              wrapperStyle={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}
+              wrapperStyle={{ fontSize: "11px", color: "var(--chart-text)" }}
             />
           </PieChart>
         </ResponsiveContainer>

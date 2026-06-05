@@ -25,6 +25,7 @@ import QueryInput from "@/components/QueryInput";
 import DashboardRenderer from "@/components/DashboardRenderer";
 import JsonInspector from "@/components/JsonInspector";
 import SkeletonDashboard from "@/components/SkeletonDashboard";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -42,7 +43,7 @@ interface GenerationError {
 
 export default function DashboardPage() {
   // Data state
-  const [csvData, setCsvData] = useState<Record<string, string>[] | null>(null);
+  const [csvData, setCsvData] = useState<Record<string, any>[] | null>(null);
   const [schemaDoc, setSchemaDoc] = useState<SchemaDoc | null>(null);
 
   // Generation state
@@ -58,7 +59,7 @@ export default function DashboardPage() {
   // ─── Data Loading ─────────────────────────────────────────────────────
 
   const handleDataLoaded = useCallback(
-    (data: Record<string, string>[], schema: SchemaDoc) => {
+    (data: Record<string, any>[], schema: SchemaDoc) => {
       setCsvData(data);
       setSchemaDoc(schema);
       setError(null);
@@ -78,13 +79,17 @@ export default function DashboardPage() {
       setLastQuery(query);
 
       try {
-        const response = await fetch("/api/generate", {
+        const response = await fetch("/api/dashboards", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query,
             schemaDoc: schemaDoc.schemaText,
             csvData: csvData?.slice(0, 100), // Send first 100 rows max
+            context: result ? {
+              previousQuery: lastQuery,
+              previousDescriptor: result.descriptor
+            } : undefined
           }),
         });
 
@@ -145,7 +150,10 @@ export default function DashboardPage() {
           <div className="app-logo-icon">G</div>
           <h1>Generative Interface Architect</h1>
         </div>
-        <span className="app-version">v1.0 • Declarative Dashboard</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+          <span className="app-version">v1.0 • Declarative Dashboard</span>
+          <ThemeToggle />
+        </div>
       </header>
 
       {/* Sidebar */}

@@ -11,10 +11,11 @@ import { useState, useCallback, useRef } from "react";
 import Papa from "papaparse";
 import { Upload, FileSpreadsheet, X, CheckCircle } from "lucide-react";
 import { generateSchemaDoc, type SchemaDoc } from "@/lib/schema-generator";
+import { coerceDataTypes } from "@/lib/data-utils";
 
 interface DataUploaderProps {
   onDataLoaded: (
-    data: Record<string, string>[],
+    data: Record<string, any>[],
     schemaDoc: SchemaDoc
   ) => void;
   currentFile?: string;
@@ -60,7 +61,8 @@ export default function DataUploader({ onDataLoaded, currentFile }: DataUploader
           }
 
           const schema = generateSchemaDoc(file.name, data);
-          onDataLoaded(data, schema);
+          const coercedData = coerceDataTypes(data);
+          onDataLoaded(coercedData, schema);
         },
         error: (err) => {
           setIsProcessing(false);
