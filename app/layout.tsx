@@ -9,10 +9,18 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Generative Interface Architect — AI Dashboard Builder",
+  title: "GenUI Playground — Visual Editor for Generative UI Specs",
   description:
-    "Upload your data, ask questions in natural language, and get personalized dashboards generated at runtime. Powered by declarative JSON descriptors and a smart rendering engine.",
-  keywords: ["dashboard", "AI", "data visualization", "generative UI", "LLM"],
+    "The missing editor for json-render and A2UI. Live visual editing, AI generation, drag-to-reorder, and one-click export for generative UI specifications.",
+  keywords: [
+    "generative UI",
+    "json-render",
+    "A2UI",
+    "visual editor",
+    "JSON playground",
+    "AI UI generation",
+    "component catalog",
+  ],
 };
 
 export default function RootLayout({
@@ -22,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body>{children}</body>
+      <body className="font-sans">{children}</body>
     </html>
   );
 }
