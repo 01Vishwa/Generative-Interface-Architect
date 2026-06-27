@@ -125,25 +125,25 @@ export default function SpecEditor() {
   }, [monaco]);
 
   return (
-    <div className="flex flex-col h-full bg-transparent">
+    <div className="flex flex-col h-full" style={{ background: 'var(--surface-0)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-transparent">
+      <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface-1)' }}>
         <div className="flex items-center gap-2">
-          <h2 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+          <h2 className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
             Editor
           </h2>
-          <span className="text-[9px] text-blue-400 font-mono bg-blue-500/10 px-1.5 py-0.5 rounded">
+          <span className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ color: 'var(--text-info)', background: 'var(--bg-info)' }}>
             {format}
           </span>
         </div>
         <div className="flex items-center gap-2">
           {validationErrors > 0 ? (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ color: 'var(--text-danger)', background: 'var(--bg-danger)' }}>
               <AlertCircle className="w-3 h-3" />
               {validationErrors} errors
             </span>
           ) : (
-            <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ color: 'var(--text-success)', background: 'var(--bg-success)' }}>
               <Check className="w-3 h-3" />
               Valid
             </span>

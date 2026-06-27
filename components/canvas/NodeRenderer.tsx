@@ -4,7 +4,7 @@
 import React, { useCallback } from "react";
 import { useSpecStore } from "@/lib/store/useSpecStore";
 import type { IRNode } from "@/lib/ir/types";
-import { RENDERER_MAP } from "./ComponentRenderers";
+import { RENDERER_MAP } from "../editor/canvas/ComponentRenderers";
 import SelectionOverlay from "./SelectionOverlay";
 import {
   SortableContext,
@@ -98,7 +98,7 @@ export default function NodeRenderer({ node, depth = 0 }: NodeRendererProps) {
         onClick={handleClick}
         className="relative group rounded-lg"
       >
-        <SelectionOverlay isSelected={isSelected} typeName={node.type} />
+        <SelectionOverlay isSelected={isSelected} typeName={node.type} nodeId={node.id} />
         {content}
       </div>
     );
@@ -107,7 +107,7 @@ export default function NodeRenderer({ node, depth = 0 }: NodeRendererProps) {
   // Deeply nested elements
   return (
     <div onClick={handleClick} className="relative group rounded">
-      <SelectionOverlay isSelected={isSelected} typeName={node.type} />
+      <SelectionOverlay isSelected={isSelected} typeName={node.type} nodeId={node.id} />
       {content}
     </div>
   );

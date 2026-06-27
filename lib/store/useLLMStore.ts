@@ -37,49 +37,41 @@ export interface Conversation {
 
 export const DEFAULT_PERSONAS: LLMPersona[] = [
   {
-    id: "genui-architect",
+    id: "architect",
     name: "GenUI Architect",
     description: "Precise, structured UI specs with optimal component hierarchy",
-    model: "openai/gpt-4o-mini",
+    model: "gpt-4o-mini",
     provider: "github",
-    temperature: 0.1,
-    systemPrompt: "",
+    temperature: 0.0,
+    systemPrompt: `You are a Senior Generative UI Engineer. Output ONLY valid JSON patches (RFC 6902) targeting the GenUI IR.
+    IR Schema: { "type": "object", "properties": { "id": {"type": "string"}, "type": {"type": "string"}, "props": {"type": "object"}, "children": {"type": "array"} } }
+    Rules: 1. Never output full spec. 2. Use 'add' for new nodes, 'replace' for props, 'move' for reorder. 3. Reference nodes by 'id'. 4. Use components from CATALOG only.`,
     maxTokens: 4096,
     icon: "🏗️",
   },
   {
-    id: "creative-explorer",
+    id: "explorer",
     name: "Creative Explorer",
     description: "Experimental, creative UI designs with rich interactions",
-    model: "anthropic/claude-3.5-sonnet",
+    model: "meta-llama/llama-3.1-8b-instruct:free",
     provider: "openrouter",
-    temperature: 0.8,
-    systemPrompt: "",
+    temperature: 0.7,
+    systemPrompt: `You are a creative UI designer. Generate complete, valid GenUI IR specifications from scratch.
+    Focus on visual hierarchy, modern patterns, and component composition. Output full JSON spec.`,
     maxTokens: 4096,
     icon: "🎨",
   },
   {
-    id: "rapid-prototype",
-    name: "Rapid Prototype",
-    description: "Fast, minimal UI scaffolding for quick iteration",
-    model: "openai/gpt-4o-mini",
-    provider: "github",
-    temperature: 0.3,
-    systemPrompt: "",
-    maxTokens: 2048,
-    icon: "⚡",
-  },
-  {
-    id: "local-privacy",
-    name: "Local & Private",
+    id: "local",
+    name: "Local Privacy (Ollama)",
     description: "Uses local Ollama models — no data leaves your machine",
     model: "llama3.2",
     provider: "ollama",
-    temperature: 0.3,
-    systemPrompt: "",
+    temperature: 0.2,
+    systemPrompt: "...",
     maxTokens: 2048,
     icon: "🔒",
-  },
+  }
 ];
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -125,7 +117,7 @@ export const useLLMStore = create<LLMState>()(
   devtools(
     persist(
       (set, get) => ({
-        activePersonaId: "genui-architect",
+        activePersonaId: "architect",
         personas: DEFAULT_PERSONAS,
         apiKeys: {},
 
@@ -149,7 +141,7 @@ export const useLLMStore = create<LLMState>()(
             personas: state.personas.filter((p) => p.id !== personaId),
             activePersonaId:
               state.activePersonaId === personaId
-                ? "genui-architect"
+                ? "architect"
                 : state.activePersonaId,
           })),
 

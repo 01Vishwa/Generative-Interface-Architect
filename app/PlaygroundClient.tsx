@@ -4,163 +4,204 @@ import React, { useEffect } from "react";
 import SpecEditor from "@/components/editor/SpecEditor";
 import VisualCanvas from "@/components/editor/VisualCanvas";
 import PropsInspector from "@/components/editor/PropsInspector";
-import PromptBar from "@/components/editor/PromptBar";
-import ExportMenu from "@/components/editor/ExportMenu";
+import ComponentRegistry from "@/components/editor/ComponentRegistry";
+import PromptBar from "@/components/llm/PromptBar";
 import HistorySidebar from "@/components/editor/HistorySidebar";
 import ImportCatalogModal from "@/components/editor/modals/ImportCatalogModal";
-import ApiKeyModal from "@/components/editor/modals/ApiKeyModal";
 import KeyboardShortcutsModal from "@/components/editor/modals/KeyboardShortcutsModal";
 import ExportModal from "@/components/editor/modals/ExportModal";
 import ShareModal from "@/components/editor/modals/ShareModal";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useResizablePanel } from "@/hooks/useResizablePanel";
-import { useEditorStore } from "@/lib/editor-store";
-import { saveSnapshot } from "@/lib/history";
-import { decodeShareUrl } from "@/lib/exportUtils";
-import { Clock, Keyboard, Sparkles } from "lucide-react";
+import SettingsPanel from "@/components/editor/modals/SettingsPanel";
+import ToastContainer from "@/components/ui/ToastContainer";
+import Header from "@/components/chrome/Header";
+import { useUIStore, type CenterViewMode } from "@/lib/store/useUIStore";
+import { useSpecStore } from "@/lib/store/useSpecStore";
+import {
+  ChevronsLeft,
+  ChevronsRight,
+  Code2,
+  Columns2,
+  Eye,
+} from "lucide-react";
 
 export default function PlaygroundClient() {
-  useKeyboardShortcuts();
+  const leftCollapsed = useUIStore((s) => s.leftCollapsed);
+  const rightCollapsed = useUIStore((s) => s.rightCollapsed);
+  const leftSidebarWidth = useUIStore((s) => s.leftSidebarWidth);
+  const rightSidebarWidth = useUIStore((s) => s.rightSidebarWidth);
+  const toggleLeftSidebar = useUIStore((s) => s.toggleLeftSidebar);
+  const toggleRightSidebar = useUIStore((s) => s.toggleRightSidebar);
+  const centerViewMode = useUIStore((s) => s.centerViewMode);
+  const setCenterViewMode = useUIStore((s) => s.setCenterViewMode);
 
-  const {
-    rawText,
-    parsedSpec,
-    format,
-    generationError,
-    setRawText,
-    setParsedSpec,
-    setFormat,
-    setHistoryOpen,
-    setShortcutsOpen,
-  } = useEditorStore();
-
-  const { ratio, containerRef, onMouseDown } = useResizablePanel(22, 75);
-
-  // ─── Load from share URL on mount ──────────────────────────────────────
+  // ─── Keyboard shortcuts ⌘1/⌘2/⌘3 ─────────────────────────────────
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    const shareParam = params.get("share");
-    if (shareParam) {
-      const decoded = decodeShareUrl(shareParam);
-      if (decoded) {
-        setFormat(decoded.format);
-        setRawText(decoded.spec);
-        try {
-          setParsedSpec(JSON.parse(decoded.spec));
-        } catch {
-          setParsedSpec(null);
-        }
-        // Clean URL
-        window.history.replaceState({}, "", "/playground");
-      }
-    }
-  }, [setFormat, setRawText, setParsedSpec]);
+    const handler = (e: KeyboardEvent) => {
+      const isCmd = e.metaKey || e.ctrlKey;
+      if (!isCmd) return;
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.closest(".monaco-editor")
+      )
+        return;
 
-  // ─── Auto-save snapshots on valid spec changes ─────────────────────────
-  useEffect(() => {
-    if (!parsedSpec) return;
-    const timer = setTimeout(() => {
-      saveSnapshot(rawText, format, parsedSpec);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [rawText, format, parsedSpec]);
+      if (e.key === "1") { e.preventDefault(); setCenterViewMode("code"); }
+      else if (e.key === "2") { e.preventDefault(); setCenterViewMode("split"); }
+      else if (e.key === "3") { e.preventDefault(); setCenterViewMode("preview"); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [setCenterViewMode]);
+
+  const modeTabs = [
+    { id: "code", label: "Code", icon: <Code2 style={{ width: 12, height: 12 }} /> },
+    { id: "split", label: "Split", icon: <Columns2 style={{ width: 12, height: 12 }} /> },
+    { id: "preview", label: "Preview", icon: <Eye style={{ width: 12, height: 12 }} /> },
+  ];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 text-gray-900">
-      {/* ─── Header ───────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-between px-5 py-2.5 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white border-b border-gray-700 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 text-white text-xs font-bold shadow-lg shadow-blue-500/20">
-            G
-          </div>
-          <div>
-            <h1 className="text-sm font-bold tracking-tight">
-              GenUI Playground
-            </h1>
-          </div>
-          <span className="text-[10px] bg-white/10 text-gray-300 px-2 py-0.5 rounded-full ml-1 font-medium">
-            Beta
-          </span>
-        </div>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", background: "var(--surface-0)", color: "var(--text-primary)" }}>
+      {/* Header */}
+      <Header />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setHistoryOpen(true)}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
-            title="Version History (Ctrl+/)"
-          >
-            <Clock className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShortcutsOpen(true)}
-            className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
-            title="Keyboard Shortcuts (?)"
-          >
-            <Keyboard className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShareModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            Share
-          </button>
-          <ExportMenu />
-        </div>
-      </header>
-
-      {/* ─── Prompt Bar ───────────────────────────────────────────────────── */}
-      <PromptBar />
-
-      {/* Generation error */}
-      {generationError && (
-        <div className="px-4 py-2 bg-red-50 border-b border-red-200 text-sm text-red-600 flex items-center gap-2">
-          <span className="font-medium">Error:</span> {generationError}
-        </div>
-      )}
-
-      {/* ─── Main 3-Pane Layout ───────────────────────────────────────────── */}
-      <div
-        ref={containerRef}
-        className="flex flex-1 overflow-hidden relative"
-      >
-        {/* Left: Monaco Editor */}
+      {/* 3-Pane Layout */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
+        {/* Left: Component Registry */}
         <div
-          className="flex flex-col min-w-[280px] border-r border-gray-200 overflow-hidden"
-          style={{ width: `${ratio}%` }}
+          className="pane-collapsible"
+          style={{
+            width: leftCollapsed ? 0 : leftSidebarWidth,
+            minWidth: leftCollapsed ? 0 : 200,
+            borderRight: leftCollapsed ? "none" : "1px solid var(--border)",
+            flexShrink: 0,
+          }}
         >
-          <SpecEditor />
+          {!leftCollapsed && <ComponentRegistry />}
         </div>
 
-        {/* Drag handle */}
-        <div
-          onMouseDown={onMouseDown}
-          className="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors shrink-0 relative z-10 group"
+        {/* Left toggle */}
+        <button
+          onClick={toggleLeftSidebar}
+          title={leftCollapsed ? "Show sidebar" : "Hide sidebar"}
+          style={{
+            position: "absolute",
+            left: leftCollapsed ? 0 : leftSidebarWidth - 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 20,
+            width: 20,
+            height: 36,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--surface-1)",
+            border: "1px solid var(--border)",
+            borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
+            color: "var(--text-muted)",
+            cursor: "pointer",
+          }}
         >
-          <div className="absolute inset-y-0 -left-1 -right-1" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-300 group-hover:bg-blue-500 rounded-full transition-colors" />
-        </div>
+          {leftCollapsed ? <ChevronsRight style={{ width: 12, height: 12 }} /> : <ChevronsLeft style={{ width: 12, height: 12 }} />}
+        </button>
 
-        {/* Right: Canvas + Inspector */}
-        <div
-          className="flex flex-col min-w-[280px] overflow-hidden"
-          style={{ width: `${100 - ratio}%` }}
-        >
-          {/* Canvas (top ~60%) */}
-          <div className="flex-[6] overflow-hidden flex flex-col border-b border-gray-200">
-            <VisualCanvas />
+        {/* Center */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 300 }}>
+          {/* Mode tabs */}
+          <div style={{ display: "flex", alignItems: "center", borderBottom: "1px solid var(--border)", background: "var(--surface-1)", height: 32, paddingLeft: 8 }}>
+            {modeTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setCenterViewMode(tab.id as CenterViewMode)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "0 12px",
+                  height: "100%",
+                  fontSize: 11,
+                  fontWeight: centerViewMode === tab.id ? 700 : 500,
+                  color: centerViewMode === tab.id ? "var(--text-accent)" : "var(--text-muted)",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: centerViewMode === tab.id ? "2px solid var(--bg-accent)" : "2px solid transparent",
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                }}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {/* Inspector/Catalog (bottom ~40%) */}
-          <div className="flex-[4] overflow-hidden">
-            <PropsInspector />
+          {/* Content */}
+          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+            {(centerViewMode === "code" || centerViewMode === "split") && (
+              <div style={{ width: centerViewMode === "split" ? "50%" : "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <SpecEditor />
+              </div>
+            )}
+            {centerViewMode === "split" && (
+              <div style={{ width: 4, background: "var(--border)", flexShrink: 0, cursor: "col-resize" }} />
+            )}
+            {(centerViewMode === "preview" || centerViewMode === "split") && (
+              <div style={{ width: centerViewMode === "split" ? "50%" : "100%", overflow: "auto", padding: 16 }}>
+                <VisualCanvas />
+              </div>
+            )}
           </div>
+
+          {/* Prompt Bar */}
+          <PromptBar />
         </div>
+
+        {/* Right: Props Inspector */}
+        <div
+          className="pane-collapsible"
+          style={{
+            width: rightCollapsed ? 0 : rightSidebarWidth,
+            minWidth: rightCollapsed ? 0 : 220,
+            borderLeft: rightCollapsed ? "none" : "1px solid var(--border)",
+            flexShrink: 0,
+          }}
+        >
+          {!rightCollapsed && <PropsInspector />}
+        </div>
+
+        {/* Right toggle */}
+        <button
+          onClick={toggleRightSidebar}
+          title={rightCollapsed ? "Show inspector" : "Hide inspector"}
+          style={{
+            position: "absolute",
+            right: rightCollapsed ? 0 : rightSidebarWidth - 10,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 20,
+            width: 20,
+            height: 36,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--surface-1)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-sm) 0 0 var(--radius-sm)",
+            color: "var(--text-muted)",
+            cursor: "pointer",
+          }}
+        >
+          {rightCollapsed ? <ChevronsLeft style={{ width: 12, height: 12 }} /> : <ChevronsRight style={{ width: 12, height: 12 }} />}
+        </button>
       </div>
 
+      {/* Global Overlays */}
+      <ToastContainer />
+      <SettingsPanel />
       <HistorySidebar />
       <ImportCatalogModal />
-      <ApiKeyModal />
       <KeyboardShortcutsModal />
       <ExportModal />
       <ShareModal />

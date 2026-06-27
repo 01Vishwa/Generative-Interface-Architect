@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "GenUI Playground — Visual Editor for Generative UI Specs",
+  title: "GenUI Studio — Visual Editor for Generative UI Specs",
   description:
     "The missing editor for json-render and A2UI. Live visual editing, AI generation, drag-to-reorder, and one-click export for generative UI specifications.",
   keywords: [
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning data-theme="dark">
       <head>
         <Script
           id="dnd-kit-error-suppression"
@@ -46,7 +46,6 @@ export default function RootLayout({
                                reason.message === 'Canceled' ||
                                reason.message === 'operation is manually canceled' ||
                                reason.msg === 'operation is manually canceled';
-                // @dnd-kit can reject with empty objects on drag cancel
                 var isEmptyObject = typeof reason === 'object' && 
                                     reason !== null && 
                                     Object.keys(reason).length === 0 &&
@@ -59,8 +58,22 @@ export default function RootLayout({
             `,
           }}
         />
+        <Script
+          id="theme-sync"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var stored = JSON.parse(localStorage.getItem('genui-ui-store') || '{}');
+                var theme = (stored.state && stored.state.theme) || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+                document.documentElement.classList.toggle('dark', theme === 'dark');
+              } catch(e) {}
+            `,
+          }}
+        />
       </head>
-      <body className="font-sans">
+      <body className="font-sans" style={{ background: "var(--surface-0)", color: "var(--text-primary)" }}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           {children}
         </ThemeProvider>

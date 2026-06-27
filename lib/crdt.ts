@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { SupabaseProvider } from "y-supabase";
+import SupabaseProvider from "y-supabase/dist/index.js";
 import { supabase } from "./supabase";
 
 export const doc = new Y.Doc();
@@ -19,6 +19,7 @@ export const joinRoom = (roomId: string) => {
     channel: roomId,
     tableName: "yjs_documents",
     columnName: "document",
+    id: roomId,
   });
 };
 

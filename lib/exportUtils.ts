@@ -5,7 +5,11 @@ import { catalogToPrompt } from "./catalogToPrompt";
  * Copy raw JSON to clipboard
  */
 export function exportJson(text: string): string {
-  return text;
+  try {
+    return JSON.stringify(JSON.parse(text), null, 2);
+  } catch {
+    return text;
+  }
 }
 
 /**

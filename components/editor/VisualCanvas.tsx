@@ -2,7 +2,7 @@
 
 import React, { useCallback, useMemo } from "react";
 import { useSpecStore } from "@/lib/store/useSpecStore";
-import CanvasErrorBoundary from "../canvas/CanvasErrorBoundary";
+import CanvasErrorBoundary from "./canvas/CanvasErrorBoundary";
 import NodeRenderer from "../canvas/NodeRenderer";
 import {
   DndContext,
@@ -19,7 +19,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { findParentNode } from "@/lib/ir/mutations";
-import PromptBar from "../llm/PromptBar";
 
 export default function VisualCanvas() {
   const irDocument = useSpecStore((s) => s.irDocument);
@@ -64,17 +63,47 @@ export default function VisualCanvas() {
   if (!irDocument || irDocument.root.children.length === 0) {
     return (
       <div
-        className="w-full h-full min-h-[400px] flex items-center justify-center p-8 bg-transparent"
+        style={{
+          width: "100%",
+          minHeight: 400,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 32,
+        }}
         onClick={handleDeselect}
       >
-        <div className="flex flex-col items-center gap-3 p-12 border-2 border-dashed border-gray-300 dark:border-gray-800 rounded-xl text-center max-w-md">
-          <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-            <span className="text-2xl">🧩</span>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 12,
+            padding: 48,
+            border: "2px dashed var(--border)",
+            borderRadius: "var(--radius-lg)",
+            textAlign: "center",
+            maxWidth: 400,
+          }}
+        >
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "var(--radius-full)",
+              background: "var(--bg-info)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 24,
+            }}
+          >
+            🧩
           </div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", margin: 0 }}>
             Your components will appear here
           </h3>
-          <p className="text-xs text-gray-500">
+          <p style={{ fontSize: 12, color: "var(--text-muted)", margin: 0 }}>
             Edit the JSON in the editor or use the catalog to add components
           </p>
         </div>
@@ -84,10 +113,16 @@ export default function VisualCanvas() {
 
   return (
     <div
-      className="w-full h-full min-h-[600px] bg-white dark:bg-[#0a0e1a] rounded-xl shadow-sm border border-gray-200 dark:border-white/10"
+      style={{
+        width: "100%",
+        minHeight: 400,
+        background: "var(--surface-0)",
+        borderRadius: "var(--radius-lg)",
+        border: "1px solid var(--border)",
+      }}
       onClick={handleDeselect}
     >
-      <div className="p-6 pb-32">
+      <div style={{ padding: 24 }}>
         <CanvasErrorBoundary>
           <DndContext
             sensors={sensors}
@@ -105,8 +140,6 @@ export default function VisualCanvas() {
           </DndContext>
         </CanvasErrorBoundary>
       </div>
-
-      <PromptBar />
     </div>
   );
 }

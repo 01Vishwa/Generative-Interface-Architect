@@ -3,7 +3,8 @@
 // events for time-travel. This is THE source of truth for the component tree.
 
 import { create } from "zustand";
-import { devtools, subscribeWithSelector } from "zustand/middleware";
+import { devtools, subscribeWithSelector, persist, createJSONStorage } from "zustand/middleware";
+import { dexieStorage } from "./dexieStorage";
 import type { IRDocument, IRNode, IRValue, MutationEvent, Branch } from "@/lib/ir/types";
 import { generateNodeId } from "@/lib/ir/types";
 import {
@@ -102,7 +103,8 @@ export interface SpecState {
 
 export const useSpecStore = create<SpecState>()(
   devtools(
-    subscribeWithSelector((set, get) => {
+    persist(
+      subscribeWithSelector((set, get) => {
       // Initialize with default json-render spec
       const initialText = DEFAULT_JSON_RENDER_SPEC;
       let initialParsed: unknown = null;
@@ -362,6 +364,21 @@ export const useSpecStore = create<SpecState>()(
         canRedo: () => get().eventIndex < get().events.length - 1,
       };
     }),
+      {
+        name: "genui-spec-store",
+        storage: createJSONStorage(() => dexieStorage),
+        partializer: (state) => ({
+          irDocument: state.irDocument,
+          rawText: state.rawText,
+          format: state.format,
+          parsedSpec: state.parsedSpec,
+          events: state.events,
+          eventIndex: state.eventIndex,
+          branches: state.branches,
+          activeBranchId: state.activeBranchId,
+        }),
+      }
+    ),
     { name: "SpecStore" }
   )
 );

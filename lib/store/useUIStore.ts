@@ -7,6 +7,7 @@ import { devtools, persist } from "zustand/middleware";
 export type PanelTab = "editor" | "preview" | "console";
 export type InspectorTab = "properties" | "registry" | "tokens";
 export type ThemeMode = "light" | "dark" | "system";
+export type CenterViewMode = "code" | "split" | "preview";
 
 export interface UIState {
   // ─── Panel Layout ──────────────────────────────────────────────────────
@@ -22,6 +23,22 @@ export interface UIState {
   timelineOpen: boolean;
   /** Timeline height in pixels */
   timelineHeight: number;
+
+  // ─── IDE Shell Layout ───────────────────────────────────────────────────
+  /** Center pane view mode: code only, split, preview only */
+  centerViewMode: CenterViewMode;
+  /** Left sidebar width in px */
+  leftSidebarWidth: number;
+  /** Right sidebar width in px */
+  rightSidebarWidth: number;
+  /** Left sidebar collapsed */
+  leftCollapsed: boolean;
+  /** Right sidebar collapsed */
+  rightCollapsed: boolean;
+  /** Project name */
+  projectName: string;
+  /** Save status */
+  saveStatus: "saved" | "saving" | "unsaved";
 
   // ─── Modals ────────────────────────────────────────────────────────────
   historyOpen: boolean;
@@ -52,6 +69,16 @@ export interface UIState {
   setTimelineOpen: (open: boolean) => void;
   setTimelineHeight: (height: number) => void;
 
+  setCenterViewMode: (mode: CenterViewMode) => void;
+  setLeftSidebarWidth: (w: number) => void;
+  setRightSidebarWidth: (w: number) => void;
+  setLeftCollapsed: (v: boolean) => void;
+  setRightCollapsed: (v: boolean) => void;
+  toggleLeftSidebar: () => void;
+  toggleRightSidebar: () => void;
+  setProjectName: (name: string) => void;
+  setSaveStatus: (status: "saved" | "saving" | "unsaved") => void;
+
   setHistoryOpen: (v: boolean) => void;
   setShortcutsOpen: (v: boolean) => void;
   setApiKeyModalOpen: (v: boolean) => void;
@@ -78,6 +105,14 @@ export const useUIStore = create<UIState>()(
         inspectorTab: "properties",
         timelineOpen: false,
         timelineHeight: 200,
+
+        centerViewMode: "split",
+        leftSidebarWidth: 280,
+        rightSidebarWidth: 300,
+        leftCollapsed: false,
+        rightCollapsed: false,
+        projectName: "Untitled Project",
+        saveStatus: "saved",
 
         historyOpen: false,
         shortcutsOpen: false,
@@ -106,6 +141,16 @@ export const useUIStore = create<UIState>()(
         setTimelineOpen: (open) => set({ timelineOpen: open }),
         setTimelineHeight: (height) => set({ timelineHeight: height }),
 
+        setCenterViewMode: (mode) => set({ centerViewMode: mode }),
+        setLeftSidebarWidth: (w) => set({ leftSidebarWidth: w }),
+        setRightSidebarWidth: (w) => set({ rightSidebarWidth: w }),
+        setLeftCollapsed: (v) => set({ leftCollapsed: v }),
+        setRightCollapsed: (v) => set({ rightCollapsed: v }),
+        toggleLeftSidebar: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
+        toggleRightSidebar: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
+        setProjectName: (name) => set({ projectName: name }),
+        setSaveStatus: (status) => set({ saveStatus: status }),
+
         setHistoryOpen: (v) => set({ historyOpen: v }),
         setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
         setApiKeyModalOpen: (v) => set({ apiKeyModalOpen: v }),
@@ -125,6 +170,12 @@ export const useUIStore = create<UIState>()(
         theme: state.theme,
         previewDevice: state.previewDevice,
         timelineHeight: state.timelineHeight,
+        centerViewMode: state.centerViewMode,
+        leftSidebarWidth: state.leftSidebarWidth,
+        rightSidebarWidth: state.rightSidebarWidth,
+        leftCollapsed: state.leftCollapsed,
+        rightCollapsed: state.rightCollapsed,
+        projectName: state.projectName,
       }) }
     ),
     { name: "UIStore" }
