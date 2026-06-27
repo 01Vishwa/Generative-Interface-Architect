@@ -5,6 +5,7 @@ import React from "react";
 import { useSpecStore } from "@/lib/store/useSpecStore";
 import { DEFAULT_CATALOG } from "@/lib/catalog";
 import { PropDefinition } from "@/lib/types";
+import { useToastStore } from "@/lib/store/useToastStore";
 import { X } from "lucide-react";
 
 /**
@@ -23,6 +24,7 @@ export default function PropsForm({
   const catalog = useSpecStore((s) => s.catalog);
   const updateProps = useSpecStore((s) => s.updateProps);
   const deleteComponent = useSpecStore((s) => s.deleteComponent);
+  const undo = useSpecStore((s) => s.undo);
   const compDef = catalog.components[componentType] || DEFAULT_CATALOG.components[componentType];
 
   if (!compDef) {
@@ -53,9 +55,16 @@ export default function PropsForm({
       <div className="pt-4 border-t border-gray-100">
         <button
           onClick={() => {
-            if (confirm("Remove this component?")) {
-              deleteComponent(elementId);
-            }
+            deleteComponent(elementId);
+            useToastStore.getState().addToast({
+              type: "undo",
+              message: `${componentType} deleted · Undo`,
+              duration: 5000,
+              actionLink: {
+                label: "Undo",
+                onClick: undo,
+              },
+            });
           }}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
         >

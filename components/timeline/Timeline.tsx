@@ -16,7 +16,7 @@ export default function Timeline() {
     canRedo,
   } = useUndoRedo();
   
-  const currentBranchId = useSpecStore((s) => s.currentBranchId);
+  const activeBranchId = useSpecStore((s) => s.activeBranchId);
 
   return (
     <div className="flex flex-col h-full bg-[#0d1117] border-t border-white/5">
@@ -53,7 +53,7 @@ export default function Timeline() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md text-xs font-medium">
             <GitBranch className="w-3 h-3" />
-            {currentBranchId}
+            {activeBranchId}
           </div>
         </div>
       </div>

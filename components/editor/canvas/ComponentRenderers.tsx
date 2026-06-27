@@ -7,15 +7,22 @@ export function CardRenderer({
   title,
   subtitle,
   description,
+  width,
+  height,
   children,
 }: {
   title?: string;
   subtitle?: string;
   description?: string;
+  width?: number | string;
+  height?: number | string;
   children?: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden transition-shadow hover:shadow-md">
+    <div 
+      className="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden transition-shadow hover:shadow-md"
+      style={{ width, height }}
+    >
       <div className="px-6 py-5 border-b border-gray-100">
         {title && (
           <h3 className="text-lg font-semibold text-gray-900 leading-tight">
@@ -42,14 +49,21 @@ export function MetricRenderer({
   label,
   value,
   trend,
+  width,
+  height,
 }: {
   label?: string;
   value?: string;
   trend?: "up" | "down" | "neutral";
   format?: string;
+  width?: number | string;
+  height?: number | string;
 }) {
   return (
-    <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg border border-gray-100">
+    <div 
+      className="p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-lg border border-gray-100 flex flex-col justify-center"
+      style={{ width, height }}
+    >
       {label && (
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
           {label}
@@ -112,10 +126,14 @@ export function TextRenderer({
 export function ButtonRenderer({
   label,
   variant,
+  width,
+  height,
 }: {
   label?: string;
   variant?: "primary" | "secondary" | "danger" | "ghost";
   action?: string;
+  width?: number | string;
+  height?: number | string;
 }) {
   const variants = {
     primary:
@@ -131,6 +149,7 @@ export function ButtonRenderer({
   return (
     <button
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 cursor-default ${variants[variant || "primary"]}`}
+      style={{ width, height }}
     >
       {label}
     </button>
@@ -140,9 +159,13 @@ export function ButtonRenderer({
 export function BadgeRenderer({
   label,
   color,
+  width,
+  height,
 }: {
   label?: string;
   color?: "success" | "warning" | "danger" | "info" | "neutral";
+  width?: number | string;
+  height?: number | string;
 }) {
   const colors = {
     success: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -154,7 +177,8 @@ export function BadgeRenderer({
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${colors[color || "neutral"]}`}
+      className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${colors[color || "neutral"]}`}
+      style={{ width, height }}
     >
       {label}
     </span>
@@ -169,11 +193,15 @@ export function StackRenderer({
   direction,
   gap,
   wrap,
+  width,
+  height,
   children,
 }: {
   direction?: "row" | "column";
   gap?: "sm" | "md" | "lg";
   wrap?: boolean;
+  width?: number | string;
+  height?: number | string;
   children?: React.ReactNode;
 }) {
   const gaps = { sm: "gap-2", md: "gap-4", lg: "gap-6" };
@@ -182,6 +210,7 @@ export function StackRenderer({
   return (
     <div
       className={`flex ${dir} ${gaps[gap || "md"]} ${wrap ? "flex-wrap" : ""}`}
+      style={{ width, height }}
     >
       {children}
     </div>
@@ -235,13 +264,17 @@ export function InputRenderer({
   label,
   placeholder,
   type,
+  width,
+  height,
 }: {
   label?: string;
   placeholder?: string;
   type?: "text" | "number" | "email" | "password";
+  width?: number | string;
+  height?: number | string;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 flex flex-col" style={{ width, height }}>
       {label && (
         <label className="block text-sm font-medium text-gray-700">
           {label}
@@ -250,7 +283,7 @@ export function InputRenderer({
       <input
         type={type || "text"}
         placeholder={placeholder}
-        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+        className="w-full h-full min-h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
         readOnly
       />
     </div>
@@ -261,19 +294,23 @@ export function SelectRenderer({
   label,
   options,
   placeholder,
+  width,
+  height,
 }: {
   label?: string;
   options?: string[];
   placeholder?: string;
+  width?: number | string;
+  height?: number | string;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 flex flex-col" style={{ width, height }}>
       {label && (
         <label className="block text-sm font-medium text-gray-700">
           {label}
         </label>
       )}
-      <select className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none">
+      <select className="w-full h-full min-h-[38px] px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none">
         {placeholder && (
           <option value="" disabled>
             {placeholder}

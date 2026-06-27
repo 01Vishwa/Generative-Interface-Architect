@@ -191,8 +191,8 @@ function SandboxComponent({
     case "Card":
       return (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm">
-          {props.title && <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{String(props.title)}</h3>}
-          {props.subtitle && <p className="text-xs text-gray-500 mb-3">{String(props.subtitle)}</p>}
+          {Boolean(props.title) && <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{String(props.title)}</h3>}
+          {Boolean(props.subtitle) && <p className="text-xs text-gray-500 mb-3">{String(props.subtitle)}</p>}
           {children}
         </div>
       );
@@ -220,7 +220,7 @@ function SandboxComponent({
         <div className="p-3">
           <div className="text-xs text-gray-500 mb-1">{String(props.label || "")}</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">{String(props.value || "0")}</div>
-          {props.trend && <div className="text-xs text-emerald-500 mt-1">{String(props.trend)}</div>}
+          {Boolean(props.trend) && <div className="text-xs text-emerald-500 mt-1">{String(props.trend)}</div>}
         </div>
       );
 
@@ -261,7 +261,7 @@ function SandboxComponent({
     case "Input":
       return (
         <div>
-          {props.label && <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">{String(props.label)}</label>}
+          {Boolean(props.label) && <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block">{String(props.label)}</label>}
           <input
             type={String(props.type || "text")}
             placeholder={String(props.placeholder || "")}
@@ -274,7 +274,7 @@ function SandboxComponent({
     case "Progress":
       return (
         <div>
-          {props.label && <div className="text-xs text-gray-500 mb-1">{String(props.label)}</div>}
+          {Boolean(props.label) && <div className="text-xs text-gray-500 mb-1">{String(props.label)}</div>}
           <div className="h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-blue-500 rounded-full transition-all"
@@ -288,7 +288,7 @@ function SandboxComponent({
       return (
         <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
-            {props.headers && (
+            {Boolean(props.headers) && (
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
                   {(Array.isArray(props.headers) ? props.headers : []).map((h: unknown, i: number) => (

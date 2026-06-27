@@ -48,7 +48,6 @@ export async function POST(req: Request) {
       system: systemPrompt,
       prompt: prompt,
       temperature: 0.1,
-      maxTokens: 4096,
     });
 
     const content = result.text || "";
