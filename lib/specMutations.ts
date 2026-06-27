@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { JsonRenderSpec, FormatType, CatalogDefinition } from "./types";
 import { getDefaultProps } from "./catalog";
 
@@ -126,7 +127,6 @@ export function reorderElementJsonRender(
 
 // ─── A2UI Mutations ──────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function insertElementA2UI(
   messages: any[],
   componentType: string,
@@ -177,7 +177,6 @@ export function insertElementA2UI(
   return newMessages;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function deleteElementA2UI(messages: any[], elementId: string): any[] {
   return messages.map((msg) => {
     if (msg.updateComponents) {
@@ -195,7 +194,6 @@ export function deleteElementA2UI(messages: any[], elementId: string): any[] {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function updateElementPropsA2UI(
   messages: any[],
   elementId: string,
@@ -219,7 +217,6 @@ export function updateElementPropsA2UI(
         } else if (typeof val === "boolean") {
           updatedProps[key] = { literalBoolean: val };
         } else if (Array.isArray(val)) {
-          // For arrays, store as literalString with join
           updatedProps[key] = { literalString: JSON.stringify(val) };
         }
       }
@@ -227,6 +224,45 @@ export function updateElementPropsA2UI(
       return {
         ...c,
         component: { [compType]: updatedProps },
+      };
+    });
+
+    return {
+      ...msg,
+      updateComponents: { ...msg.updateComponents, components },
+    };
+  });
+}
+
+export function reorderElementA2UI(
+  messages: any[],
+  parentId: string,
+  oldIndex: number,
+  newIndex: number
+): any[] {
+  return messages.map((msg) => {
+    if (!msg.updateComponents) return msg;
+
+    const components = msg.updateComponents.components.map((c: any) => {
+      if (c.id !== parentId) return c;
+
+      const compType = Object.keys(c.component)[0];
+      const existingProps = c.component[compType] || {};
+      const childrenVal = existingProps.children;
+      if (!childrenVal?.literalString) return c;
+
+      const childrenList = childrenVal.literalString.split(/\s+/).filter(Boolean);
+      const [removed] = childrenList.splice(oldIndex, 1);
+      childrenList.splice(newIndex, 0, removed);
+
+      return {
+        ...c,
+        component: {
+          [compType]: {
+            ...existingProps,
+            children: { literalString: childrenList.join(" ") },
+          },
+        },
       };
     });
 
@@ -371,6 +407,25 @@ export function findParentId(spec: JsonRenderSpec, elementId: string): string | 
   for (const [id, el] of Object.entries(spec.elements)) {
     if (el.children?.includes(elementId)) {
       return id;
+    }
+  }
+  return null;
+}
+
+export function findParentIdA2UI(messages: any[], elementId: string): string | null {
+  for (const msg of messages) {
+    if (msg.updateComponents?.components) {
+      for (const c of msg.updateComponents.components) {
+        const type = Object.keys(c.component)[0];
+        const props = c.component[type] || {};
+        const childrenVal = props.children;
+        if (childrenVal?.literalString) {
+          const childrenList = childrenVal.literalString.split(/\s+/).filter(Boolean);
+          if (childrenList.includes(elementId)) {
+            return c.id;
+          }
+        }
+      }
     }
   }
   return null;

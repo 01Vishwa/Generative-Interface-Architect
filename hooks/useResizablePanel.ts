@@ -16,6 +16,7 @@ export function useResizablePanel(minPercent = 20, maxPercent = 80) {
   useEffect(() => {
     const saved = getSplitRatio();
     if (saved >= minPercent && saved <= maxPercent) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRatio(saved);
     }
   }, [minPercent, maxPercent]);

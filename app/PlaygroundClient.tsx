@@ -10,6 +10,8 @@ import HistorySidebar from "@/components/editor/HistorySidebar";
 import ImportCatalogModal from "@/components/editor/modals/ImportCatalogModal";
 import ApiKeyModal from "@/components/editor/modals/ApiKeyModal";
 import KeyboardShortcutsModal from "@/components/editor/modals/KeyboardShortcutsModal";
+import ExportModal from "@/components/editor/modals/ExportModal";
+import ShareModal from "@/components/editor/modals/ShareModal";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useResizablePanel } from "@/hooks/useResizablePanel";
 import { useEditorStore } from "@/lib/editor-store";
@@ -17,7 +19,7 @@ import { saveSnapshot } from "@/lib/history";
 import { decodeShareUrl } from "@/lib/exportUtils";
 import { Clock, Keyboard, Sparkles } from "lucide-react";
 
-export default function PlaygroundPage() {
+export default function PlaygroundClient() {
   useKeyboardShortcuts();
 
   const {
@@ -97,6 +99,12 @@ export default function PlaygroundPage() {
           >
             <Keyboard className="w-4 h-4" />
           </button>
+          <button
+            onClick={() => setShareModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
+            Share
+          </button>
           <ExportMenu />
         </div>
       </header>
@@ -150,11 +158,12 @@ export default function PlaygroundPage() {
         </div>
       </div>
 
-      {/* ─── Modals & Overlays ────────────────────────────────────────────── */}
       <HistorySidebar />
       <ImportCatalogModal />
       <ApiKeyModal />
       <KeyboardShortcutsModal />
+      <ExportModal />
+      <ShareModal />
     </div>
   );
 }

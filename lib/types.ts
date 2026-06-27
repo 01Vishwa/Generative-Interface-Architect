@@ -2,6 +2,20 @@
 
 export type FormatType = "json-render" | "a2ui";
 
+// ─── Unified Intermediate Representation (IR) ──────────────────────────────────
+
+export interface UnifiedElement {
+  id: string;
+  type: string;
+  props: Record<string, unknown>;
+  children?: string[]; // Array of child IDs
+}
+
+export interface UnifiedSpec {
+  root: string;
+  elements: Record<string, UnifiedElement>;
+}
+
 // ─── Catalog Definition ──────────────────────────────────────────────────────
 
 export type PropType = "string" | "number" | "boolean" | "enum" | "string[]" | "string[][]";

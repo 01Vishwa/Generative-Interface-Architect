@@ -1,21 +1,25 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import { catalogToPrompt } from "@/lib/catalogToPrompt";
 import { DEFAULT_CATALOG } from "@/lib/catalog";
 import type { FormatType, CatalogDefinition } from "@/lib/types";
+import { generateText, streamText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 
 export async function POST(req: Request) {
   try {
-    const { prompt, format, apiKey } = (await req.json()) as {
+    const { prompt, format, apiKey, provider = "openai" } = (await req.json()) as {
       prompt: string;
       format: FormatType;
       apiKey?: string;
+      provider?: "openai" | "anthropic";
     };
 
-    // Try request-provided key first, then env variable
-    const token = apiKey || process.env.GITHUB_TOKEN;
+    const token = apiKey || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY;
     if (!token) {
       return NextResponse.json(
-        { error: "No API key provided. Please set your GitHub token in the settings." },
+        { error: "No API key provided. Please provide one in the settings." },
         { status: 401 }
       );
     }
@@ -23,132 +27,60 @@ export async function POST(req: Request) {
     const catalog: CatalogDefinition = DEFAULT_CATALOG;
     const systemPrompt = catalogToPrompt(catalog, format);
 
-    // Try streaming first
+    let aiProvider;
+    let modelName = "";
+
+    if (provider === "anthropic") {
+      const anthropic = createAnthropic({ apiKey: token });
+      aiProvider = anthropic("claude-3-5-sonnet-20240620");
+      modelName = "claude-3-5-sonnet";
+    } else {
+      const openai = createOpenAI({ apiKey: token });
+      aiProvider = openai("gpt-4o");
+      modelName = "gpt-4o";
+    }
+
+    // Since we need structured JSON format, we'll use generateText for simplicity
+    // although streamText supports tool calls for streaming JSON. For GenUI we want raw JSON text.
+    
+    const result = await generateText({
+      model: aiProvider,
+      system: systemPrompt,
+      prompt: prompt,
+      temperature: 0.1,
+      maxTokens: 4096,
+    });
+
+    const content = result.text || "";
+
     try {
-      const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: prompt },
-          ],
-          temperature: 0.1,
-          max_tokens: 4096,
-          stream: true,
-          response_format: { type: "json_object" },
-        }),
-      });
+      // Extract JSON if wrapped in markdown blocks
+      const jsonStr = content.replace(/```json\n?|\n?```/g, "").trim();
+      let parsed = JSON.parse(jsonStr);
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("GitHub Models API error:", response.status, errorBody);
-
-        // Fallback to non-streaming
-        return await nonStreamingFallback(token, systemPrompt, prompt, format);
+      // Handle A2UI array wrapping
+      if (format === "a2ui" && !Array.isArray(parsed)) {
+        if (Array.isArray(parsed.components)) {
+          parsed = parsed.components;
+        } else if (Array.isArray(parsed.messages)) {
+          parsed = parsed.messages;
+        } else {
+          const firstArray = Object.values(parsed).find(Array.isArray);
+          if (firstArray) parsed = firstArray;
+        }
       }
 
-      // Return the SSE stream directly
-      const stream = new ReadableStream({
-        async start(controller) {
-          const reader = response.body!.getReader();
-          const decoder = new TextDecoder();
-
-          try {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) {
-                controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-                controller.close();
-                break;
-              }
-              controller.enqueue(value);
-            }
-          } catch (err) {
-            controller.error(err);
-          }
-        },
-      });
-
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-      });
-    } catch (streamError) {
-      console.warn("Streaming failed, falling back to non-streaming:", streamError);
-      return await nonStreamingFallback(token, systemPrompt, prompt, format);
+      return NextResponse.json({ spec: parsed });
+    } catch (parseError) {
+      return NextResponse.json(
+        { error: "Failed to parse generated JSON", content },
+        { status: 500 }
+      );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Generate API Error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate" },
-      { status: 500 }
-    );
-  }
-}
-
-async function nonStreamingFallback(
-  token: string,
-  systemPrompt: string,
-  prompt: string,
-  format: FormatType
-) {
-  const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.1,
-      max_tokens: 4096,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error("Non-streaming API error:", response.status, errorBody);
-    return NextResponse.json(
-      { error: `API error: ${response.status}` },
-      { status: response.status }
-    );
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content || "";
-
-  try {
-    let parsed = JSON.parse(content);
-
-    // Handle A2UI array wrapping
-    if (format === "a2ui" && !Array.isArray(parsed)) {
-      if (Array.isArray(parsed.components)) {
-        parsed = parsed.components;
-      } else if (Array.isArray(parsed.messages)) {
-        parsed = parsed.messages;
-      } else {
-        const firstArray = Object.values(parsed).find(Array.isArray);
-        if (firstArray) parsed = firstArray;
-      }
-    }
-
-    return NextResponse.json({ spec: parsed });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to parse generated JSON" },
+      { error: error instanceof Error ? error.message : "Failed to generate" },
       { status: 500 }
     );
   }

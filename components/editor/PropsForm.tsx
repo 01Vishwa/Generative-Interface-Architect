@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React from "react";
-import { useEditorStore } from "@/lib/editor-store";
+import { useSpecStore } from "@/lib/store/useSpecStore";
 import { DEFAULT_CATALOG } from "@/lib/catalog";
 import { PropDefinition } from "@/lib/types";
 import { X } from "lucide-react";
@@ -19,7 +20,9 @@ export default function PropsForm({
   props: Record<string, unknown>;
   elementId: string;
 }) {
-  const { catalog, updateElementProps, deleteElement } = useEditorStore();
+  const catalog = useSpecStore((s) => s.catalog);
+  const updateProps = useSpecStore((s) => s.updateProps);
+  const deleteComponent = useSpecStore((s) => s.deleteComponent);
   const compDef = catalog.components[componentType] || DEFAULT_CATALOG.components[componentType];
 
   if (!compDef) {
@@ -31,7 +34,7 @@ export default function PropsForm({
   }
 
   const handleChange = (key: string, value: unknown) => {
-    updateElementProps(elementId, { [key]: value });
+    updateProps(elementId, { [key]: value as any });
   };
 
   return (
@@ -51,7 +54,7 @@ export default function PropsForm({
         <button
           onClick={() => {
             if (confirm("Remove this component?")) {
-              deleteElement(elementId);
+              deleteComponent(elementId);
             }
           }}
           className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
